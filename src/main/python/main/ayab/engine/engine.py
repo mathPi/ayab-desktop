@@ -65,6 +65,7 @@ class Engine(SignalSender, QDockWidget):
         self.config.refresh()
         self.status = StatusTab()
         self.setup_ui()
+        self.preferences = parent.prefs
         parent.ui.dock_container_layout.addWidget(self)
 
         self.pattern: Pattern = None  # type:ignore
@@ -167,7 +168,14 @@ class Engine(SignalSender, QDockWidget):
         self.config.portname = self.__read_portname()
         self.control.start(self.pattern, self.config, operation)
 
-        with keep.presenting(on_fail="pass"):
+        keep_mode = None
+        if self.preferences.value("keep_awake"):
+            self.__logger.debug("Keeping screen awake activated")
+            # Activate the keep mode only if the preference is activated
+            keep_mode = keep.presenting(on_fail="pass")
+            keep_mode.__enter__()
+
+        try:
             while True:
                 # continue operating
                 # typically each step involves some communication with the device
@@ -199,6 +207,12 @@ class Engine(SignalSender, QDockWidget):
             # send signal to finish operation
             # "finish.wav" sound only plays if knitting was not canceled
             self.emit_operation_finisher(operation, not self.__canceled)
+
+        finally:
+            # stop the screen keeper no matter what append
+            if keep_mode is not None:
+                self.__logger.debug("Keeping screen awake stopped")
+                keep_mode.__exit__(None,None,None)
 
     def __handle_status(self) -> None:
         if self.status.active:
