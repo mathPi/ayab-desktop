@@ -19,7 +19,7 @@
 #    https://github.com/AllYarnsAreBeautiful/ayab-desktop
 
 from __future__ import annotations
-from typing import cast
+from typing import cast, Tuple
 from bitarray import bitarray
 import numpy as np
 import numpy.typing as npt
@@ -72,14 +72,15 @@ class Pattern(object):
         # Order colors most-frequent first
         # NB previously they were ordered lightest-first
         histogram = self.__pattern.histogram()
-        if self.__mode != Mode.SINGLEBED:
-            dest_map = list(np.argsort(histogram[0 : self.__num_colors]))
-        else:
+
+        if self.__mode == Mode.SINGLEBED or self.__mode == Mode.SINGLEBED_COLOR_CHANGE:
             # For single bed, leave the colors as is but
             # map them down to [0:__num_colors]
             # https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image.remap_palette
             # `list(range(256))` is the identity tranform
             dest_map = list(range(self.__num_colors))
+        else:
+            dest_map = list(np.argsort(histogram[0 : self.__num_colors]))
 
         # reverse it to get to zero as the first color
         dest_map.reverse()
@@ -115,6 +116,16 @@ class Pattern(object):
                         self.__pattern_expanded[(self.__num_colors * row) + color][
                             col
                         ] = True
+
+    @property
+    def background_color(self) -> int:
+        # for now the background color is the most represented color
+        values, counts = np.unique(np.array(self.__pattern), return_counts=True)
+        ind = np.argmax(counts)
+        return int(values[ind])
+
+    def colors_of_row(self, row_index) -> list[int]:
+        return np.unique(self.__pattern_intern[row_index])
 
     def __calc_pat_start_end_needles(self) -> bool:
         if self.__alignment == Alignment.CENTER:

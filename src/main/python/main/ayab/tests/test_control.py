@@ -133,6 +133,42 @@ class TestControl(unittest.TestCase):
         control.start_row = 1
         assert control.func(control, 12) == (0, 0, False, False)
 
+    def test__singlebed_color_change(self):
+        control = Control(self.parent, self.parent.engine)
+        control.pattern = Pattern(
+            Image.open('/Users/mpister/Downloads/ananas.png'), Config(Machine(0), Mode.SINGLEBED_COLOR_CHANGE), 3
+        )
+        control.num_colors = 3
+        control.start_row = 0
+        control.inf_repeat = False
+        control.pat_height = control.pattern.pat_height
+        control.len_pat_expanded = control.pat_height * control.num_colors
+        control.func = ModeFunc._singlebed_color_change
+        print(control.func(control, 0))
+        print(control.func(control, 1))
+        # assert control.func(control, 0) == (0, 0, False, False)
+        # assert control.func(control, 1) == (0, 0, True, False)
+        # assert control.func(control, 2) == (1, 1, False, False)
+        # assert control.func(control, 3) == (1, 1, True, False)
+        # assert control.func(control, 4) == (2, 2, False, False)
+        # assert control.func(control, 5) == (2, 2, True, False)
+        # assert control.func(control, 6) == (0, 3, False, False)
+        # assert control.func(control, 7) == (0, 3, True, False)
+        # assert control.func(control, 8) == (1, 4, False, False)
+        # assert control.func(control, 9) == (1, 4, True, False)
+        # assert control.func(control, 10) == (2, 5, False, False)
+        # assert control.func(control, 11) == (2, 5, True, False)
+        # assert control.func(control, 12) == (0, 6, False, False)
+        # assert control.func(control, 13) == (0, 6, True, False)
+        # assert control.func(control, 14) == (1, 7, False, False)
+        # assert control.func(control, 15) == (1, 7, True, False)
+        # assert control.func(control, 16) == (2, 8, False, False)
+        # assert control.func(control, 17) == (2, 8, True, True)
+        # control.inf_repeat = True
+        # assert control.func(control, 18) == (0, 0, False, False)
+        # control.start_row = 1
+        # assert control.func(control, 12) == (0, 0, False, False)
+
     def test__middlecolorstwice_ribber(self):
         control = Control(self.parent, self.parent.engine)
         control.pattern = Pattern(

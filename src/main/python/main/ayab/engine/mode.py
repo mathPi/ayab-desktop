@@ -21,9 +21,11 @@
 from __future__ import annotations
 
 from enum import Enum
+from traceback import print_tb
 
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QComboBox
+from numpy.lib.function_base import select
 
 from ..utils import odd, even
 from typing import TYPE_CHECKING, Callable, TypeAlias
@@ -34,13 +36,14 @@ if TYPE_CHECKING:
 
 class Mode(Enum):
     SINGLEBED = 0
+    SINGLEBED_COLOR_CHANGE = 5
     CLASSIC_RIBBER = 1
     MIDDLECOLORSTWICE_RIBBER = 2
     HEARTOFPLUTO_RIBBER = 3
     CIRCULAR_RIBBER = 4
 
     def row_multiplier(self, ncolors: int) -> int:
-        if self.name == "SINGLEBED":
+        if self.name == "SINGLEBED" or self.name == "SINGLEBED_COLOR_CHANGE":
             return 1
         if (
             self.name == "CLASSIC_RIBBER" and ncolors > 2
@@ -87,6 +90,7 @@ class Mode(Enum):
         box.addItem(tr_("KnitMode", "Ribber: Middle-Colors-Twice"))
         box.addItem(tr_("KnitMode", "Ribber: Heart of Pluto"))
         box.addItem(tr_("KnitMode", "Ribber: Circular"))
+        box.addItem(tr_("KnitMode", "Singlebed color change"))
 
 
 if TYPE_CHECKING:
@@ -122,6 +126,39 @@ class ModeFunc(object):
         color = 0
 
         row_index = 2 * control.pat_row
+
+        blank_line = False
+
+        # Check if the last line of the pattern was requested
+        last_line = control.pat_row == control.pat_height - 1
+
+        return color, row_index, blank_line, last_line
+
+    @staticmethod
+    def _singlebed_color_change(control: Control, line_number: int) -> ModeTuple:
+        line_number += control.start_row
+
+        # when knitting infinitely, keep the requested
+        # line_number in its limits
+        if control.inf_repeat:
+            line_number %= control.pat_height
+        control.pat_row = line_number
+
+        # 0   1   2   3   4 .. (pat_row)
+        # |   |   |   |   |
+        # 0 1 2 3 4 5 6 7 8 .. (row_index)
+
+        # color is always 0 in singlebed,
+        # because both colors are knitted at once
+        pattern_row = control.pattern.palette
+        colors_of_row = set(control.pattern.colors_of_row(row_index=line_number))
+        contrast_colors = list(colors_of_row.difference({control.pattern.background_color}))
+        if contrast_colors:
+            color = contrast_colors[0]
+        else:
+            color = control.pattern.background_color
+
+        row_index = 1 * control.pat_row
 
         blank_line = False
 

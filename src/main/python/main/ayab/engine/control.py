@@ -213,6 +213,7 @@ class Control(SignalSender):
         # get data for next line of knitting
         color, row_index, blank_line, last_line = self.mode_func(self, line_number)
         bits = self.select_needles_API6(color, row_index, blank_line)
+        print(bits)
 
         # Send line to machine
         # Note that we never set the "final line" flag here, because
@@ -267,10 +268,10 @@ class Control(SignalSender):
         self.status.line_number = line_number
         if self.inf_repeat:
             self.status.repeats = self.pattern_repeats
-        if self.mode != Mode.SINGLEBED:
+        if self.mode != Mode.SINGLEBED and Mode.SINGLEBED_COLOR_CHANGE:
             self.status.color_symbol = self.COLOR_SYMBOLS[color]  # type: ignore
         self.status.color = self.pattern.palette[color]
-        if self.FLANKING_NEEDLES and self.mode != Mode.SINGLEBED:
+        if self.FLANKING_NEEDLES and self.mode not in [Mode.SINGLEBED, Mode.SINGLEBED_COLOR_CHANGE]:
             self.status.bits = bits[
                 self.pattern.knit_start_needle : self.pattern.knit_end_needle
             ]
@@ -291,7 +292,7 @@ class Control(SignalSender):
         # if necessary to knit the background color
         if (
             self.mode.flanking_needles(color, self.num_colors)
-            and self.mode != Mode.SINGLEBED
+            and self.mode != Mode.SINGLEBED and self.mode != Mode.SINGLEBED_COLOR_CHANGE
         ):
             bits[0 : self.start_needle] = True
             bits[self.end_needle : self.machine.width] = True
