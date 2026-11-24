@@ -44,7 +44,7 @@ jobs:
 
       - name: Convert UI and translation files
         run: |
-          bash setup-environment.ps1
+          python scripts/generate.py
 
       - name: Remove unneeded files
         shell: bash
@@ -159,7 +159,7 @@ jobs:
 
       - name: Convert UI and translation files
         run: |
-          bash setup-environment.ps1
+          python scripts/generate.py
 
       - name: Remove unneeded files
         run: |
@@ -278,7 +278,7 @@ jobs:
 
       - name: Convert UI and translation files
         run: |
-          bash setup-environment.ps1
+          python scripts/generate.py
 
       - name: Relocate
         run: |

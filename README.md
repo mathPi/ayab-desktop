@@ -56,10 +56,13 @@ rights for USB communication by adding your user to some groups.
 
 AYAB requires Windows version 10 or later.
 
-Install [Git for Windows](https://git-scm.com/download/win), which also provides the
-`bash` shell needed by `setup-environment.ps1`.
-
-You will also need to download and install Perl from [https://www.perl.org/get.html](https://www.perl.org/get.html).
+Install [Git for Windows](https://git-scm.com/download/win) and mise, for instance with
+winget:
+```powershell
+    winget install Git.Git jdx.mise
+```
+Then **open a new terminal** (PowerShell, `cmd` or Git Bash): a terminal opened before
+the installation does not see the updated `PATH`.
 </details>
 
 <details>
@@ -67,25 +70,22 @@ You will also need to download and install Perl from [https://www.perl.org/get.h
 macOS
 </summary>
 
-You can install Git using Homebrew:
-```bash
-    brew install git
-```
-You will also need the Xcode command line tools:
+Install the Xcode command line tools (they also provide Git) and mise, for
+instance with Homebrew:
 ```bash
     xcode-select --install
+    brew install mise
 ```
-Install python from [the official universal2 installer](https://www.python.org/ftp/python/3.11.8/python-3.11.8-macos11.pkg). (Conda does not produce universal binaries)  
+Python itself is installed by mise (see below): there is no need to install it separately.
 
-If you encounter the pip `SSL:TLSV1_ALERT_PROTOCOL_VERSION` problem:
-```bash
-    curl https://bootstrap.pypa.io/get-pip.py | python
-```
+The Python installed by mise is not universal2, so a local `mise run build` produces an
+app for your Mac's architecture only. Universal2 release builds are done in CI.
 </details>
 
 ### Universal Setup Steps
-Once platform-specific setup is complete, [install mise](https://mise.jdx.dev/getting-started.html)
-and, optionally, [activate it in your shell](https://mise.jdx.dev/getting-started.html#activate-mise)
+Once platform-specific setup is complete (on Linux,
+[install mise](https://mise.jdx.dev/getting-started.html) too), you can optionally
+[activate mise in your shell](https://mise.jdx.dev/getting-started.html#activate-mise)
 so that the right Python and the project virtual environment are picked up automatically
 when you enter the repository.
 
@@ -100,20 +100,20 @@ Install Python and uv, then set up the development environment:
     mise install
     mise run setup
 ```
-`mise run setup` creates the virtual environment (`.venv`) with all dependencies from
-`uv.lock`, converts the PySide6 `.ui` files, generates the translation files and installs
-the [pre-commit](https://pre-commit.com/) git hooks.
+`mise run setup` fetches the example patterns (git submodule), creates the virtual
+environment (`.venv`) with all dependencies from `uv.lock`, generates the Python modules
+for the Qt `.ui`/`.qrc` files and the translation files (`scripts/generate.py`), and
+installs the [pre-commit](https://pre-commit.com/) git hooks.
 
 Re-run `mise run generate` whenever a `.ui`, `.qrc` or translation file changes (e.g. after
 a `git pull`).
 
-Finally, you can start AYAB with
+Finally, start AYAB with
 ```bash
-    mise exec -- uv run fbs run
+    mise run start
 ```
-
-If mise is activated in your shell, the `mise exec --` prefix is not needed (e.g. `uv sync`,
-`uv run fbs run`).
+It regenerates the UI files first if needed, so you can also use it right after a
+`git pull`.
 
 Common tasks are defined in `mise.toml` (`mise tasks` lists them):
 ```bash
@@ -121,6 +121,9 @@ Common tasks are defined in `mise.toml` (`mise tasks` lists them):
     mise run ci       # lint, tests and type checking, as in the "Python Tests" workflow
     mise run build    # generate UI files, freeze the app and create the installer
 ```
+To run other commands in the project environment, prefix them with `mise exec --` (e.g.
+`mise exec -- uv run pytest -k pattern`); the prefix is not needed if mise is activated in
+your shell.
 
 ### Managing dependencies
 
